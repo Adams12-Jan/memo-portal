@@ -301,19 +301,19 @@ export default function ModernAuth({
         ></div>
 
         {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-3.5">
-          <div className="h-11 flex items-center justify-center shrink-0 p-2.5 bg-white rounded-xl border border-[#CEC9BF] shadow-sm">
+        <div className="relative z-10 flex items-center gap-4">
+          <div className="h-16 w-16 flex items-center justify-center shrink-0 p-2.5 bg-white rounded-2xl border border-[#CEC9BF] shadow-md">
             <img 
               src={customBrandLogoUrl} 
               alt="Brand Logo" 
-              className="h-full object-contain" 
+              className="h-full w-full object-contain animate-fade-in" 
               referrerPolicy="no-referrer"
               onError={(event) => { (event.currentTarget as HTMLImageElement).src = defaultLogo; }} 
             />
           </div>
           <div>
-            <h2 className="font-sans font-black text-sm tracking-[0.25em] text-[#F3F4F7] leading-none uppercase">VETIVA</h2>
-            <p className="text-[10px] mt-1 tracking-[0.15em] font-mono text-[#CEC9BF] font-extrabold uppercase leading-none">INTERNAL MEMORANDUM</p>
+            <h2 className="font-sans font-black text-base tracking-[0.25em] text-[#F3F4F7] leading-none uppercase">VETIVA</h2>
+            <p className="text-[10px] mt-1.5 tracking-[0.15em] font-mono text-[#CEC9BF] font-extrabold uppercase leading-none">INTERNAL MEMORANDUM</p>
           </div>
         </div>
 
@@ -375,16 +375,19 @@ export default function ModernAuth({
           
           {/* Mobile responsive header */}
           <div className="space-y-3">
-            <div className="lg:hidden flex items-center gap-2 mb-6 select-none">
-              <div className="h-9 flex items-center justify-center shrink-0 p-1.5 bg-white border border-[#CEC9BF] rounded-xl shadow-xs">
+            <div className="flex items-center gap-3 mb-6 select-none font-sans">
+              <div className="h-14 w-14 flex items-center justify-center shrink-0 p-2 bg-white border border-[#CEC9BF] rounded-2xl shadow-sm">
                 <img 
                   src={customBrandLogoUrl} 
                   alt="Logo" 
-                  className="h-full object-contain" 
+                  className="h-full w-full object-contain animate-fade-in" 
                   onError={(event) => { (event.currentTarget as HTMLImageElement).src = defaultLogo; }} 
                 />
               </div>
-              <span className="font-sans font-black text-xs tracking-widest text-[#3E3E3B] uppercase">VETIVA</span>
+              <div>
+                <span className="block font-sans font-black text-xs tracking-widest text-[#3E3E3B] uppercase">VETIVA</span>
+                <span className="block text-[9px] font-mono tracking-wider text-[#848580] uppercase font-extrabold mt-0.5">INTERNAL MEMORANDUM</span>
+              </div>
             </div>
 
             <h2 className="text-2xl md:text-3.5xl font-sans font-black text-[#3E3E3B] tracking-tight leading-none">
