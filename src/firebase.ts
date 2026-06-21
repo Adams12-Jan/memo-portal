@@ -7,12 +7,12 @@ import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/st
 // Instructions: Get these values from Firebase Console
 // https://console.firebase.google.com/ → Project Settings → Your apps → SDK setup and configuration
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCzHO7XmpQTfqAt0blZZNgWJSsCKodzpr8",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "memo-portal-84a84.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "memo-portal-84a84",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "memo-portal-84a84.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "671032885343",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:671032885343:web:1b3e68a57635a1c58b1bea",
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
 };
 
