@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Mail, Calendar, Eye, RefreshCw, Save, Sparkles, Send, 
+  Mail, Calendar, Eye, RefreshCw, Save, Sparkles, Send, Paintbrush,
   Users, Trash2, Clock, CheckCircle2, UserPlus, FileCode, Check, 
   ChevronRight, Laptop, Smartphone, HelpCircle, ShieldAlert 
 } from 'lucide-react';
@@ -126,6 +126,7 @@ export default function CmsPortal({
   const [logoUploadLoading, setLogoUploadLoading] = useState(false);
   const [backgroundUploadLoading, setBackgroundUploadLoading] = useState(false);
   const [saveSettingsSuccess, setSaveSettingsSuccess] = useState(false);
+  const [settingsCategory, setSettingsCategory] = useState<'branding' | 'colors' | 'fiscal' | 'support'>('branding');
 
   useEffect(() => {
     setCmsLogoText(systemSettings.customLogoText);
@@ -678,114 +679,194 @@ export default function CmsPortal({
           </p>
         </div>
 
-        <div className="flex gap-1 bg-slate-800/80 p-1 rounded-xl border border-slate-700 text-xs font-semibold shrink-0">
-          <button 
-            id="subtab-templates"
-            onClick={() => setSubTab('templates')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'templates' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            Email Templates
-          </button>
-          <button 
-            id="subtab-sent-log"
-            onClick={() => setSubTab('sentLog')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'sentLog' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            Sent Outbox ({sentEmails.length})
-          </button>
-          <button 
-            id="subtab-directory"
-            onClick={() => setSubTab('directory')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'directory' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            Corporate Staff ({staffMembers.length})
-          </button>
-          <button 
-            id="subtab-users"
-            onClick={() => setSubTab('users')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'users' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            User Accounts
-          </button>
-          <button 
-            id="subtab-deals"
-            onClick={() => setSubTab('deals')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'deals' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            Sales Deals ({deals.length})
-          </button>
-          <button 
-            id="subtab-campaigns"
-            onClick={() => setSubTab('campaigns')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'campaigns' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            Campaigns ({campaigns.length})
-          </button>
-          <button 
-            id="subtab-utilities"
-            onClick={() => setSubTab('utilities')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'utilities' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            System Scheduler
-          </button>
-          <button 
-            id="subtab-settings"
-            onClick={() => setSubTab('settings')}
-            className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer ${subTab === 'settings' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-white'}`}
-          >
-            ⚙️ IT CMS Settings
-          </button>
-        </div>
       </div>
 
-      {/* SUB-TAB 1: EMAIL TEMPLATES BUILD SYSTEM */}
-      {subTab === 'templates' && (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          {/* Column A: Left side template selector links */}
-          <div className="lg:col-span-4 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
-            <div className="p-4 bg-slate-50 border-b border-slate-200">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Customizable Mail Flow</span>
-            </div>
-            
-            <div className="divide-y divide-slate-100">
-              {templates.map(t => {
-                const isActive = t.id === selectedTemplateId;
-                return (
-                  <button
-                    id={`select-template-btn-${t.id}`}
-                    key={t.id}
-                    onClick={() => setSelectedTemplateId(t.id)}
-                    className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer ${isActive ? 'bg-blue-50/50 border-r-4 border-blue-505 font-medium' : ''}`}
-                  >
-                    <div className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: t.bannerColor }}></div>
-                    <div className="min-w-0">
-                      <span className={`text-xs font-bold block ${isActive ? 'text-blue-700' : 'text-slate-800'}`}>{t.name}</span>
-                      <p className="text-[11px] text-slate-400 mt-1 lines-clamp-2 leading-normal">{t.description}</p>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="p-4 bg-slate-50/80 border-t border-slate-200 text-center">
-              <button
-                id="reset-templates-factory-btn"
-                onClick={() => {
-                  if (confirm("Reset editing templates to pristine default system states? All customized markup changes will refresh.")) {
-                    onResetTemplates();
-                    alert("Custom layouts restored successfully.");
-                  }
-                }}
-                className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center justify-center gap-1 mx-auto"
-              >
-                <RefreshCw className="w-3.5 h-3.5" /> Revert all Templates
-              </button>
-            </div>
+      {/* CMS Workspace Sidebar & Content Panel */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Navigation Sidebar - Non-scattered, spacious */}
+        <div className="lg:col-span-3 bg-white border border-slate-200 rounded-2xl p-4.5 shadow-xs space-y-4">
+          <div>
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest font-mono block px-2.5">System Modules</span>
           </div>
 
-          {/* Column B: Right side editable workspace and visual sandboxed representation */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className="space-y-1">
+            <button
+              id="subtab-templates"
+              onClick={() => setSubTab('templates')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2.5 text-xs font-semibold select-none ${
+                subTab === 'templates' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold animate-pulse-subtle' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <FileCode className="w-4 h-4 shrink-0" />
+              <span>Email Templates</span>
+            </button>
+
+            <button
+              id="subtab-sent-log"
+              onClick={() => setSubTab('sentLog')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-semibold select-none ${
+                subTab === 'sentLog' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Clock className="w-4 h-4 shrink-0" />
+                <span>Sent Outbox</span>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono ${
+                subTab === 'sentLog' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>{sentEmails.length}</span>
+            </button>
+
+            <button
+              id="subtab-directory"
+              onClick={() => setSubTab('directory')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-semibold select-none ${
+                subTab === 'directory' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Users className="w-4 h-4 shrink-0" />
+                <span>Corporate Staff</span>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono ${
+                subTab === 'directory' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>{staffMembers.length}</span>
+            </button>
+
+            <button
+              id="subtab-users"
+              onClick={() => setSubTab('users')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2.5 text-xs font-semibold select-none ${
+                subTab === 'users' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <UserPlus className="w-4 h-4 shrink-0" />
+              <span>User Accounts</span>
+            </button>
+
+            <button
+              id="subtab-deals"
+              onClick={() => setSubTab('deals')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-semibold select-none ${
+                subTab === 'deals' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <ChevronRight className="w-4 h-4 shrink-0" />
+                <span>Sales Deals</span>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono ${
+                subTab === 'deals' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>{deals.length}</span>
+            </button>
+
+            <button
+              id="subtab-campaigns"
+              onClick={() => setSubTab('campaigns')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-semibold select-none ${
+                subTab === 'campaigns' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Send className="w-4 h-4 shrink-0" />
+                <span>Campaigns</span>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono ${
+                subTab === 'campaigns' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>{campaigns.length}</span>
+            </button>
+
+            <button
+              id="subtab-utilities"
+              onClick={() => setSubTab('utilities')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2.5 text-xs font-semibold select-none ${
+                subTab === 'utilities' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>System Scheduler</span>
+            </button>
+
+            <button
+              id="subtab-settings"
+              onClick={() => setSubTab('settings')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center gap-2.5 text-xs font-semibold select-none ${
+                subTab === 'settings' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <Palette className="w-4 h-4 shrink-0" />
+              <span>IT CMS Settings</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Right Panel Workspace Content */}
+        <div className="lg:col-span-9 space-y-6">
+          {/* SUB-TAB 1: EMAIL TEMPLATES BUILD SYSTEM */}
+          {subTab === 'templates' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+              
+              {/* Column A: Left side template selector links */}
+              <div className="lg:col-span-1 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+                <div className="p-4 bg-slate-50 border-b border-slate-200">
+                  <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block font-mono">Customizable Mail Flow</span>
+                </div>
+                
+                <div className="divide-y divide-slate-100">
+                  {templates.map(t => {
+                    const isActive = t.id === selectedTemplateId;
+                    return (
+                      <button
+                        id={`select-template-btn-${t.id}`}
+                        key={t.id}
+                        onClick={() => setSelectedTemplateId(t.id)}
+                        className={`w-full text-left p-4 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer ${isActive ? 'bg-blue-50/50 border-r-4 border-blue-500 font-medium' : ''}`}
+                      >
+                        <div className="w-2.5 h-2.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: t.bannerColor }}></div>
+                        <div className="min-w-0">
+                          <span className={`text-xs font-bold block ${isActive ? 'text-blue-700' : 'text-slate-800'}`}>{t.name}</span>
+                          <p className="text-[11px] text-slate-400 mt-1 lines-clamp-2 leading-normal">{t.description}</p>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="p-4 bg-slate-50/80 border-t border-slate-200 text-center">
+                  <button
+                    id="reset-templates-factory-btn"
+                    onClick={() => {
+                      if (confirm("Reset editing templates to pristine default system states? All customized markup changes will refresh.")) {
+                        onResetTemplates();
+                        alert("Custom layouts restored successfully.");
+                      }
+                    }}
+                    className="text-xs font-semibold text-rose-600 hover:text-rose-800 flex items-center justify-center gap-1 mx-auto"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" /> Revert all Templates
+                  </button>
+                </div>
+              </div>
+
+              {/* Column B: Right side editable workspace and visual sandboxed representation */}
+              <div className="lg:col-span-2 space-y-6">
             
             {/* The Code Editor Panel */}
             <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-xs space-y-4">
@@ -1608,7 +1689,7 @@ export default function CmsPortal({
 
       {/* SUB-TAB 7: IT DEPT GLOBAL CMS & THEMES SETTINGS */}
       {subTab === 'settings' && (
-        <div className="max-w-4xl mx-auto space-y-6 animate-fade-in text-left">
+        <div className="space-y-6 animate-fade-in text-left">
           
           <div className="bg-slate-900 border border-slate-800 text-white p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-md shadow-indigo-900/15">
             <div>
@@ -1656,384 +1737,529 @@ export default function CmsPortal({
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8">
-            
-            {/* Box 1: Theme & Interface Styling (CMS custom themes) */}
-            <div className="bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-xs">
-              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                <Palette className="w-4 h-4 text-blue-500" /> 1. Dynamic Portal Themes
+                    {/* Secondary Sub-Tabs for settings organization */}
+          <div className="grid grid-cols-2 md:grid-cols-4 bg-slate-100 p-1.5 rounded-xl border border-slate-200 gap-1.5 select-none">
+            <button
+              type="button"
+              onClick={() => setSettingsCategory('branding')}
+              className={`py-2 px-3 rounded-lg text-center transition-all cursor-pointer text-xs font-bold ${
+                settingsCategory === 'branding' 
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/55' 
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              🎨 Themes & Identity
+            </button>
+            <button
+              type="button"
+              onClick={() => setSettingsCategory('colors')}
+              className={`py-2 px-3 rounded-lg text-center transition-all select-none cursor-pointer text-xs font-bold ${
+                settingsCategory === 'colors' 
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/55' 
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              💅 UI Color Palette
+            </button>
+            <button
+              type="button"
+              onClick={() => setSettingsCategory('fiscal')}
+              className={`py-2 px-3 rounded-lg text-center transition-all select-none cursor-pointer text-xs font-bold ${
+                settingsCategory === 'fiscal' 
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/55' 
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              ₦ Policy Limits
+            </button>
+            <button
+              type="button"
+              onClick={() => setSettingsCategory('support')}
+              className={`py-2 px-3 rounded-lg text-center transition-all select-none cursor-pointer text-xs font-bold ${
+                settingsCategory === 'support' 
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/55' 
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-slate-50'
+              }`}
+            >
+              🛠️ Emergency Control
+            </button>
+          </div>
+
+          {/* Render individual settings views */}
+          {settingsCategory === 'branding' && (
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-6 shadow-xs animate-fade-in text-left">
+              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-150 pb-2.5 flex items-center gap-2 font-sans">
+                <Palette className="w-4 h-4 text-blue-500" /> Dynamic Branding & Themes
+              </h4>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Theme Selector */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Theme Color Brand Palette Accent</label>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {[
+                      { id: 'default', label: 'Vetiva Default' },
+                      { id: 'blue', label: 'Ocean Blue' },
+                      { id: 'purple', label: 'Velvet Purple' },
+                      { id: 'emerald', label: 'Emerald Green' },
+                      { id: 'crimson', label: 'Venetian Red' },
+                      { id: 'orange', label: 'Tech Orange' }
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setCmsAccent(opt.id as any)}
+                        className={`p-2 rounded-xl text-center text-xs font-bold transition-all border cursor-pointer ${
+                          cmsAccent === opt.id 
+                            ? 'bg-blue-600 text-white border-blue-600 shadow-xs font-bold' 
+                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 font-medium'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Corner Sizing Selection */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Corner Border Sizing Style</label>
+                  <div className="space-y-1.5">
+                    {[
+                      { id: 'default', label: 'Standard Round', desc: 'Smooth default responsive curve' },
+                      { id: 'rounded', label: 'Fluid Round (Highly Rounded Theme Preset)', desc: 'Pronounced circular corners' },
+                      { id: 'sharp', label: 'Brutalist Sharp', desc: 'No curves, precise straight box borders' }
+                    ].map(opt => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => setCmsBorder(opt.id as any)}
+                        className={`w-full p-2.5 rounded-xl text-left text-xs transition-all border cursor-pointer block ${
+                          cmsBorder === opt.id 
+                            ? 'bg-blue-600 border-blue-600 text-white' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <div className="font-bold">{opt.label}</div>
+                        <div className={`text-[10px] sm:inline block ${cmsBorder === opt.id ? 'text-white/80' : 'text-slate-400'}`}>{opt.desc}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Company Label / Custom Header */}
+                <div className="space-y-2 col-span-1 md:col-span-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Custom App Header / Logo Title text</label>
+                  <input
+                    type="text"
+                    value={cmsLogoText}
+                    onChange={(e) => setCmsLogoText(e.target.value)}
+                    placeholder="e.g. Internal Memo System"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  />
+                  <span className="text-[10px] text-slate-400">Changes the primary name of the app shown in top-left banner layouts.</span>
+                </div>
+
+                {/* Logo File Selector and URL input */}
+                <div className="space-y-2 bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono flex items-center gap-1">
+                    <span>Company Logo Asset</span>
+                  </label>
+                  
+                  {cmsLogoUrl && (
+                    <div className="h-10 w-fit max-w-[200px] flex items-center bg-white border border-slate-200 rounded-lg p-2.5 mb-2 overflow-hidden shadow-2xs">
+                      <img src={cmsLogoUrl} alt="Logo Preview" className="h-full object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      id="cms-logo-url-input"
+                      value={cmsLogoUrl}
+                      onChange={(e) => setCmsLogoUrl(e.target.value)}
+                      placeholder="Input asset image URL"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleLogoFileSelection}
+                        className="text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 flex-1 min-w-0"
+                      />
+                      <button
+                        type="button"
+                        id="cms-logo-btn-upload"
+                        onClick={handleUploadLogo}
+                        disabled={logoUploadLoading}
+                        className="px-2.5 py-1 bg-slate-800 text-white rounded text-[11px] hover:bg-slate-900 cursor-pointer text-xs disabled:opacity-50"
+                      >
+                        {logoUploadLoading ? 'Sending...' : 'Upload'}
+                      </button>
+                    </div>
+                    {logoUploadStatus && <div className="text-[10px] antialiased text-blue-600 font-bold">{logoUploadStatus}</div>}
+                  </div>
+                </div>
+
+                {/* Login Background Selector and URL input */}
+                <div className="space-y-2 bg-slate-50/50 p-4 rounded-xl border border-slate-150">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Login Screen backdrop wallpaper</label>
+                  
+                  {cmsBackgroundUrl && (
+                    <div className="h-10 w-fit max-w-[200px] flex items-center bg-white border border-slate-200 rounded-lg p-2.5 mb-2 overflow-hidden shadow-2xs">
+                      <img src={cmsBackgroundUrl} alt="Backdrop Preview" className="h-full object-contain" referrerPolicy="no-referrer" />
+                    </div>
+                  )}
+
+                  <div className="space-y-1.5">
+                    <input
+                      type="text"
+                      id="cms-bg-url-input"
+                      value={cmsBackgroundUrl}
+                      onChange={(e) => setCmsBackgroundUrl(e.target.value)}
+                      placeholder="Input graphic image URL"
+                      className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleBackgroundFileSelection}
+                        className="text-[11px] text-slate-500 file:mr-2 file:py-1 file:px-2 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 flex-1 min-w-0"
+                      />
+                      <button
+                        type="button"
+                        id="cms-bg-btn-upload"
+                        onClick={handleUploadBackground}
+                        disabled={backgroundUploadLoading}
+                        className="px-2.5 py-1 bg-slate-800 text-white rounded text-[11px] hover:bg-slate-900 cursor-pointer text-xs disabled:opacity-50"
+                      >
+                        {backgroundUploadLoading ? 'Sending...' : 'Upload'}
+                      </button>
+                    </div>
+                    {backgroundUploadStatus && <div className="text-[10px] antialiased text-blue-600 font-bold">{backgroundUploadStatus}</div>}
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {settingsCategory === 'colors' && (
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-xs animate-fade-in space-y-6 text-left">
+              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-150 pb-2.5 flex items-center gap-2 font-sans font-bold">
+                <Paintbrush className="w-4 h-4 text-blue-500" /> UI Custom Palette Configuration & Live Preview
+              </h4>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                
+                {/* Form controls */}
+                <div className="lg:col-span-5 space-y-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Authentication Card Base Frame</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={cmsFrameColor}
+                        onChange={(e) => setCmsFrameColor(e.target.value)}
+                        className="w-10 h-10 border border-slate-200 rounded-lg cursor-pointer p-0 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={cmsFrameColor}
+                        onChange={(e) => setCmsFrameColor(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Data Table Borders</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={cmsTableColor}
+                        onChange={(e) => setCmsTableColor(e.target.value)}
+                        className="w-10 h-10 border border-slate-200 rounded-lg cursor-pointer p-0 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={cmsTableColor}
+                        onChange={(e) => setCmsTableColor(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Primary Default Icon Hue</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={cmsIconColor}
+                        onChange={(e) => setCmsIconColor(e.target.value)}
+                        className="w-10 h-10 border border-slate-200 rounded-lg cursor-pointer p-0 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={cmsIconColor}
+                        onChange={(e) => setCmsIconColor(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Interactive Button Fill Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={cmsButtonBg}
+                        onChange={(e) => setCmsButtonBg(e.target.value)}
+                        className="w-10 h-10 border border-slate-200 rounded-lg cursor-pointer p-0 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={cmsButtonBg}
+                        onChange={(e) => setCmsButtonBg(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Button Font Text Color</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        value={cmsButtonText}
+                        onChange={(e) => setCmsButtonText(e.target.value)}
+                        className="w-10 h-10 border border-slate-200 rounded-lg cursor-pointer p-0 shrink-0"
+                      />
+                      <input
+                        type="text"
+                        value={cmsButtonText}
+                        onChange={(e) => setCmsButtonText(e.target.value)}
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-bold text-slate-700"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Interactive Live Preview Mock widget */}
+                <div className="lg:col-span-7 bg-slate-50 border border-slate-200 rounded-2xl p-5 space-y-4">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block font-mono mb-2">👇 Dynamic Coloring Live Preview Preview (Unsaved)</span>
+                  
+                  {/* Mock auth screen box */}
+                  <div className="p-4 border rounded-xl shadow-xs" style={{ backgroundColor: cmsFrameColor, borderColor: cmsTableColor }}>
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-6 h-6 rounded-lg flex items-center justify-center" style={{ backgroundColor: `${cmsIconColor}20` }}>
+                        <ShieldCheck className="w-4 h-4" style={{ color: cmsIconColor }} />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800">Dynamic Card Mockup</span>
+                    </div>
+
+                    <div className="border border-dashed p-3 rounded-lg bg-white mb-3" style={{ borderColor: cmsTableColor }}>
+                      <p className="text-[10px] text-slate-500 font-semibold mb-2">Border color styling uses the Table Border Color:</p>
+                      
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b" style={{ borderColor: cmsTableColor }}>
+                            <th className="text-[9px] font-bold text-slate-400 uppercase tracking-wider py-1 font-mono">Mock Field</th>
+                            <th className="text-[9px] font-bold text-slate-400 uppercase tracking-wider py-1 font-mono text-right">Data</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b" style={{ borderColor: cmsTableColor }}>
+                            <td className="text-[10px] font-bold text-slate-600 py-1 flex items-center gap-1">
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cmsIconColor }}></span> Value
+                            </td>
+                            <td className="text-[10px] font-bold text-slate-800 py-1 text-right">₦1,500,000</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        style={{ backgroundColor: cmsButtonBg, color: cmsButtonText }}
+                        className="text-[10px] font-extrabold px-3 py-1.5 rounded-lg shadow-sm font-sans transition-all active:scale-95 cursor-default hover:opacity-90 animate-pulse-subtle"
+                      >
+                        Interactive Button UI Mockup
+                      </button>
+                    </div>
+
+                  </div>
+
+                  <p className="text-[9px] text-slate-400 italic font-mono uppercase">This card updates automatically as you slide color selectors or input hex keys.</p>
+                </div>
+
+              </div>
+            </div>
+          )}
+
+          {settingsCategory === 'fiscal' && (
+            <div className="bg-white border border-slate-200 p-6 rounded-2xl md:max-w-xl mx-auto shadow-xs animate-fade-in space-y-5 text-left">
+              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-150 pb-2.5 flex items-center gap-2 font-sans font-bold">
+                <ShieldCheck className="w-4 h-4 text-emerald-500" /> Cash Advance Fiscal Policy Rules Definitions
               </h4>
               
-              {/* Theme Selector */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Theme Color Brand Palette Accent</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('default')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'default' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#9F9055] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Vetiva Gold</span>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('blue')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'blue' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#2563EB] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Ocean Blue</span>
-                  </button>
-                  
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('purple')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'purple' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#8B5CF6] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Velvet Purple</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('emerald')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'emerald' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#10B981] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Emerald Green</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('crimson')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'crimson' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#EF4444] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Venetian Red</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setCmsAccent('orange')}
-                    className={`p-2 rounded-lg border text-xs font-bold text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-1 ${
-                      cmsAccent === 'orange' ? 'bg-slate-50 border-blue-600 text-blue-700 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    <span className="w-5 h-5 rounded-full bg-[#F97316] inline-block shadow-inner" />
-                    <span className="text-[10px] mt-1 font-bold">Tech Orange</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Border radius selector */}
-              <div className="space-y-2 pt-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Corner Border Roundness Style</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setCmsBorder('default')}
-                    className={`p-2 bg-white rounded-lg border border-slate-200 text-xs font-bold text-center transition-all cursor-pointer ${
-                      cmsBorder === 'default' ? 'border-blue-600 text-blue-700 font-extrabold ring-1 ring-blue-500/20 bg-slate-50/50' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Standard Round
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCmsBorder('rounded')}
-                    className={`p-2 bg-white rounded-2xl border border-slate-200 text-xs font-bold text-center transition-all cursor-pointer ${
-                      cmsBorder === 'rounded' ? 'border-blue-600 text-blue-700 font-extrabold ring-1 ring-blue-500/20 bg-slate-50/50' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Fluid Round (HD)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setCmsBorder('sharp')}
-                    className={`p-2 bg-white rounded-none border border-slate-200 text-xs font-bold text-center transition-all cursor-pointer ${
-                      cmsBorder === 'sharp' ? 'border-blue-600 text-blue-700 font-extrabold ring-1 ring-blue-500/20 bg-slate-50/50' : 'text-slate-600 hover:bg-slate-50'
-                    }`}
-                  >
-                    Brutalist Sharp
-                  </button>
-                </div>
-              </div>
-
-              {/* Custom Logo Title */}
-              <div className="space-y-1.5 pt-2">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Company App Header Name</label>
-                <input
-                  type="text"
-                  value={cmsLogoText}
-                  onChange={(e) => setCmsLogoText(e.target.value)}
-                  placeholder="e.g. Memo Portal"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Updates header title and system branding dynamically.</p>
-              </div>
-
-              <div className="space-y-1.5 pt-4">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Custom Portal Logo</label>
-                <div className="grid gap-2">
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Max Cash Advance Request Limit (₦)</label>
                   <input
-                    type="url"
-                    value={cmsLogoUrl}
-                    onChange={(e) => setCmsLogoUrl(e.target.value)}
-                    placeholder="Paste logo image URL or upload below"
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
+                    type="number"
+                    value={cmsMaxAdvance}
+                    onChange={(e) => setCmsMaxAdvance(Number(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
                   />
-                  <div className="flex items-center gap-2">
-                    <label className="w-full cursor-pointer text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-center hover:bg-slate-200 transition-all">
-                      Browse logo file
-                      <input type="file" accept="image/*" className="hidden" onChange={handleLogoFileSelection} />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleUploadLogo}
-                      disabled={logoUploadLoading}
-                      className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
-                    >
-                      {logoUploadLoading ? 'Uploading…' : 'Upload'}
-                    </button>
+                  <span className="text-[10px] text-slate-400 block mt-1">Stops staff from logging requisitions exceeding this absolute limit value.</span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Mandatory Payout Retirement Timeline (Days)</label>
+                  <input
+                    type="number"
+                    value={cmsRetireDays}
+                    onChange={(e) => setCmsRetireDays(Number(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  />
+                  <span className="text-[10px] text-slate-400 block mt-1">The maximum grace timeline in days granted to reconcile files post-payment before flagging overdue warnings.</span>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Executive Director Screening Trigger (₦)</label>
+                  <input
+                    type="number"
+                    value={cmsExecThreshold}
+                    onChange={(e) => setCmsExecThreshold(Number(e.target.value) || 0)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                  />
+                  <span className="text-[10px] text-slate-400 block mt-1">Requisitions strictly exceeding this value require final Board/Executive approval.</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {settingsCategory === 'support' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fade-in text-left">
+              
+              {/* IT Support settings */}
+              <div className="bg-white border border-slate-200 p-6 rounded-2xl space-y-5 shadow-xs">
+                <h4 className="text-sm font-bold text-slate-800 border-b border-slate-150 pb-2.5 flex items-center gap-2 font-sans font-bold">
+                  <Laptop className="w-4 h-4 text-blue-500" /> IT Support Channel Details
+                </h4>
+
+                <div className="space-y-4">
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Support Helpline Email Address</label>
+                    <input
+                      type="email"
+                      value={cmsSupportEmail}
+                      onChange={(e) => setCmsSupportEmail(e.target.value)}
+                      placeholder="e.g. it-support@vetivagroup.com"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                    />
                   </div>
-                  {logoUploadStatus && <p className="text-[10px] text-slate-500">{logoUploadStatus}</p>}
-                  {cmsLogoUrl && (
-                    <img src={cmsLogoUrl} alt="Logo preview" className="max-h-16 rounded-lg border border-slate-200 object-contain" />
-                  )}
-                </div>
-              </div>
 
-              <div className="space-y-1.5 pt-4">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Login Portal Background</label>
-                <div className="grid gap-2">
-                  <input
-                    type="url"
-                    value={cmsBackgroundUrl}
-                    onChange={(e) => setCmsBackgroundUrl(e.target.value)}
-                    placeholder="Paste background image URL or upload below"
-                    className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                  />
-                  <div className="flex items-center gap-2">
-                    <label className="w-full cursor-pointer text-xs text-slate-700 bg-slate-100 border border-slate-200 rounded-lg px-3 py-2 text-center hover:bg-slate-200 transition-all">
-                      Browse background file
-                      <input type="file" accept="image/*" className="hidden" onChange={handleBackgroundFileSelection} />
-                    </label>
-                    <button
-                      type="button"
-                      onClick={handleUploadBackground}
-                      disabled={backgroundUploadLoading}
-                      className="px-3 py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50"
-                    >
-                      {backgroundUploadLoading ? 'Uploading…' : 'Upload'}
-                    </button>
+                  <div className="space-y-1">
+                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Support Hotline Phone details</label>
+                    <input
+                      type="text"
+                      value={cmsSupportPhone}
+                      onChange={(e) => setCmsSupportPhone(e.target.value)}
+                      placeholder="e.g. +234 1 270 9650"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:bg-white"
+                    />
                   </div>
-                  {backgroundUploadStatus && <p className="text-[10px] text-slate-500">{backgroundUploadStatus}</p>}
-                  {cmsBackgroundUrl && (
-                    <div className="border border-slate-200 rounded-xl overflow-hidden">
-                      <img src={cmsBackgroundUrl} alt="Background preview" className="w-full h-24 object-cover" />
-                    </div>
-                  )}
-                </div>
-              </div>
 
-              <div className="space-y-1.5 pt-4">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Login Card Frame Color</label>
-                <input
-                  type="color"
-                  value={cmsFrameColor}
-                  onChange={(e) => setCmsFrameColor(e.target.value)}
-                  className="w-full h-12 p-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 outline-none transition-all"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Choose a border/frame accent for login and portal containers.</p>
-              </div>
-
-              <div className="space-y-1.5 pt-4">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Table Border Color</label>
-                <input
-                  type="color"
-                  value={cmsTableColor}
-                  onChange={(e) => setCmsTableColor(e.target.value)}
-                  className="w-full h-12 p-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 outline-none transition-all"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Choose table and data grid border styling for dashboard content.</p>
-              </div>
-
-              <div className="space-y-1.5 pt-4">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Icon & Button Color</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="color"
-                    value={cmsIconColor}
-                    onChange={(e) => setCmsIconColor(e.target.value)}
-                    className="w-full h-12 p-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-700 outline-none transition-all"
-                  />
-                  <div className="space-y-2">
+                  <div className="pt-2 flex items-center gap-2.5 bg-slate-50 p-3.5 rounded-xl border border-slate-150 select-none">
+                    <input
+                      type="checkbox"
+                      id="cms-debug-box-check"
+                      checked={cmsDebugEnabled}
+                      onChange={(e) => setCmsDebugEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
+                    />
                     <div>
-                      <label className="text-[10px] text-slate-500 block">Button Background</label>
-                      <input type="color" value={cmsButtonBg} onChange={(e) => setCmsButtonBg(e.target.value)} className="w-full h-10 p-1 bg-white border border-slate-200 rounded-lg" />
-                    </div>
-                    <div>
-                      <label className="text-[10px] text-slate-500 block">Button Text</label>
-                      <input type="color" value={cmsButtonText} onChange={(e) => setCmsButtonText(e.target.value)} className="w-full h-10 p-1 bg-white border border-slate-200 rounded-lg" />
+                      <label htmlFor="cms-debug-box-check" className="text-xs font-bold text-slate-700 cursor-pointer block select-none">IT Sandbox Debug Mode</label>
+                      <span className="text-[10px] text-slate-400 block leading-tight">Enables local testing diagnostic alerts and database status logs.</span>
                     </div>
                   </div>
                 </div>
-                <p className="text-[9px] text-slate-400 font-medium">Choose color for UI icons, buttons, and interactive elements throughout the portal.</p>
               </div>
 
-            </div>
+              {/* Danger operations reset center */}
+              <div className="bg-rose-50/50 border border-rose-200 p-6 rounded-2xl space-y-5 shadow-xs">
+                <h4 className="text-sm font-bold text-rose-800 border-b border-rose-150 pb-2.5 flex items-center gap-2 font-sans font-bold">
+                  <ShieldAlert className="w-4 h-4 text-rose-600" /> Dangerous Administrative Area
+                </h4>
 
-            {/* Box 2: Financial Policy Configurations (CMS Control) */}
-            <div className="bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-xs">
-              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                <Wrench className="w-4 h-4 text-blue-500" /> 2. Cash Advance Fiscal Rules
-              </h4>
-
-              {/* Limit value */}
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Maximum Single Request Limit (₦)</label>
-                <input
-                  type="number"
-                  value={cmsMaxAdvance}
-                  onChange={(e) => setCmsMaxAdvance(Number(e.target.value))}
-                  placeholder="2000000"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Any request exceeding this constraint will fail validation checks instantly.</p>
-              </div>
-
-              {/* Retirement Window Days */}
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Mandatory Retirement Window (Days)</label>
-                <input
-                  type="number"
-                  value={cmsRetireDays}
-                  onChange={(e) => setCmsRetireDays(Number(e.target.value))}
-                  placeholder="14"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Required timeline before a Cash Advance is flagged as delinquent.</p>
-              </div>
-
-              {/* Exec audit Threshold */}
-              <div className="space-y-1.5 pt-1">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Executive Audit Threshold Trigger (₦)</label>
-                <input
-                  type="number"
-                  value={cmsExecThreshold}
-                  onChange={(e) => setCmsExecThreshold(Number(e.target.value))}
-                  placeholder="1000000"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-                <p className="text-[9px] text-slate-400 font-medium">Amounts above this value automatically route to the Executive Director for final screening.</p>
-              </div>
-
-            </div>
-
-            {/* Box 3: IT Support Details */}
-            <div className="bg-white border border-slate-200 p-5 rounded-xl space-y-4 shadow-xs">
-              <h4 className="text-sm font-bold text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
-                <Laptop className="w-4 h-4 text-blue-500" /> 3. IT Contact Support Center
-              </h4>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Support Email Address</label>
-                <input
-                  type="email"
-                  value={cmsSupportEmail}
-                  onChange={(e) => setCmsSupportEmail(e.target.value)}
-                  placeholder="it.support@vetiva.com"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-700 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wide block font-mono">Emergency Hotline / Ext.</label>
-                <input
-                  type="text"
-                  value={cmsSupportPhone}
-                  onChange={(e) => setCmsSupportPhone(e.target.value)}
-                  placeholder="+234 1 448 9000"
-                  className="w-full bg-white border border-slate-200 rounded-lg p-2.5 text-xs text-slate-705 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold"
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-150 rounded-lg">
-                <div className="space-y-0.5">
-                  <span className="text-[11px] font-bold text-slate-700 block">Enable IT Sandbox Debug Mode</span>
-                  <span className="text-[9px] text-slate-400 block font-medium">Bypasses strict verification states for rapid testing.</span>
+                <div className="bg-rose-50 border border-rose-100 p-3 rounded-xl text-left">
+                  <span className="text-[9px] font-bold text-rose-500 uppercase tracking-widest block font-mono mb-1">🚨 CRITICAL WARNING 🚨</span>
+                  <p className="text-[10px] text-rose-700 leading-normal font-sans">
+                    These operations bypass typical transactional state checks and permanently delete data from memory permanently. Always use extreme caution.
+                  </p>
                 </div>
-                <input
-                  type="checkbox"
-                  checked={cmsDebugEnabled}
-                  onChange={(e) => setCmsDebugEnabled(e.target.checked)}
-                  className="w-4 h-4 accent-blue-600 scale-110 cursor-pointer"
-                />
+
+                <div className="space-y-2.5">
+                  <button
+                    type="button"
+                    id="flush-advances-btn"
+                    onClick={() => {
+                      if (confirm("🚨 EMERGENCY ACTION 🚨\nAre you sure you want to permanently delete ALL Cash Advance requests? This action is irreversible and clears all active lists.")) {
+                        onPurgeAdvances();
+                        alert("Database cleaned: All Cash Advance requests permanently purged.");
+                      }
+                    }}
+                    className="w-full py-2.5 bg-white hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 rounded-xl text-xs font-bold transition-all cursor-pointer hover:shadow-xs active:scale-98"
+                  >
+                    🧨 Clear Cash Advance Database ({advances.length} records)
+                  </button>
+
+                  <button
+                    type="button"
+                    id="flush-retirements-btn"
+                    onClick={() => {
+                      if (confirm("🚨 EMERGENCY ACTION 🚨\nAre you sure you want to permanently delete ALL expensed retirement files? This will reset matching advance reconciliations.")) {
+                        onPurgeRetirements();
+                        alert("Database cleaned: All retirements data permanently purged.");
+                      }
+                    }}
+                    className="w-full py-2.5 bg-white hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 rounded-xl text-xs font-bold transition-all cursor-pointer hover:shadow-xs active:scale-98"
+                  >
+                    🧨 Clear Retirements Database ({retirements.length} records)
+                  </button>
+
+                  <button
+                    type="button"
+                    id="emergency-factory-reset-btn"
+                    onClick={() => {
+                      if (confirm("🚨 EMERGENCY ACTION 🚨\nAre you sure you want to restore pristine default corporate structures, email templates, users, and wipe active collections? This reloads seed profiles.")) {
+                        onResetFactoryDefault();
+                        alert("Factory default presets loaded. Database clean and complete.");
+                      }
+                    }}
+                    className="w-full py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs shadow-rose-100 active:scale-98"
+                  >
+                    ⚡ Full Factory Hard Reset System Defaults
+                  </button>
+                </div>
               </div>
 
             </div>
-
-            {/* Box 4: IT Department Database Maintenance Danger Zone */}
-            <div className="bg-rose-50/50 border border-rose-200 p-5 rounded-xl space-y-4 shadow-2xs">
-              <h4 className="text-sm font-black text-rose-800 border-b border-rose-200/60 pb-2 flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-rose-600" /> 4. Emergency Database Danger Zone
-              </h4>
-
-              <p className="text-[11px] text-rose-600 leading-relaxed font-sans font-medium">
-                IT operations can execute database flush commands instantly. This action is immutable and overrides normal locks. Confirmations will prompt beforehand.
-              </p>
-
-              <div className="space-y-2.5 pt-2">
-                <button
-                  type="button"
-                  id="flush-advances-btn"
-                  onClick={() => {
-                    if (confirm("🚨 EMERGENCY ACTION 🚨\nAre you sure you want to permanently delete ALL Cash Advance requests? This action is irreversible and clears all active lists.")) {
-                      onPurgeAdvances();
-                      alert("Database cleaned: All Cash Advance requests permanently purged.");
-                    }
-                  }}
-                  className="w-full py-2 bg-white hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 rounded-lg text-xs font-black transition-all cursor-pointer hover:shadow-md"
-                >
-                  🧨 Clear Cash Advance Database ({advances.length} records)
-                </button>
-
-                <button
-                  type="button"
-                  id="flush-retirements-btn"
-                  onClick={() => {
-                    if (confirm("🚨 EMERGENCY ACTION 🚨\nAre you sure you want to permanently delete ALL expensed retirement files? This will reset matching advance reconciliations.")) {
-                      onPurgeRetirements();
-                      alert("Database cleaned: All retirements data permanently purged.");
-                    }
-                  }}
-                  className="w-full py-2 bg-white hover:bg-rose-600 text-rose-600 hover:text-white border border-rose-200 rounded-lg text-xs font-black transition-all cursor-pointer hover:shadow-md"
-                >
-                  🧨 Clear Retirements Database ({retirements.length} records)
-                </button>
-              </div>
-
-              <div className="pt-2 border-t border-rose-200/50">
-                <p className="text-[9px] text-rose-500 font-bold uppercase tracking-wider font-mono">Authorized IT Access Level • Root Permissions Active</p>
-              </div>
-
-            </div>
-
-          </div>
+          )}
 
         </div>
       )}
+
+        </div> {/* closing lg:col-span-9 space-y-6 */}
+      </div> {/* closing grid grid-cols-1 lg:grid-cols-12 gap-6 items-start */}
+
 
       {/* Sent Email Log Viewer Code Backdrop Modal */}
       {viewingEmailBody && (
