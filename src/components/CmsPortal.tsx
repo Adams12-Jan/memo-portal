@@ -5,10 +5,10 @@ import {
   ChevronRight, Laptop, Smartphone, HelpCircle, ShieldAlert 
 } from 'lucide-react';
 import { ImagePlus, UploadCloud } from 'lucide-react';
-import { EmailTemplate, SentEmail, UserRole, DEPARTMENTS, SystemCustomSettings } from '../types';
+import { EmailTemplate, SentEmail, UserRole, DEPARTMENTS, SystemCustomSettings, AuditLogEntry } from '../types';
 import authClient, { AuthUser } from '../services/authClient';
 import cmsClient from '../services/cmsClient';
-import { Palette, Wrench, ShieldCheck } from 'lucide-react';
+import { Palette, Wrench, ShieldCheck, KeyRound, MonitorCheck } from 'lucide-react';
 
 interface CmsPortalProps {
   templates: EmailTemplate[];
@@ -26,6 +26,7 @@ interface CmsPortalProps {
   onSaveSystemSettings: (nextSettings: SystemCustomSettings) => void;
   onPurgeAdvances: () => void;
   onPurgeRetirements: () => void;
+  logs: AuditLogEntry[];
 }
 
 export default function CmsPortal({
@@ -43,10 +44,11 @@ export default function CmsPortal({
   systemSettings,
   onSaveSystemSettings,
   onPurgeAdvances,
-  onPurgeRetirements
+  onPurgeRetirements,
+  logs
 }: CmsPortalProps) {
-  // Sub-tabs: templates, sentLog, directory, users, utilities, settings
-  const [subTab, setSubTab] = useState<'templates' | 'sentLog' | 'directory' | 'users' | 'deals' | 'campaigns' | 'utilities' | 'settings'>('templates');
+  // Sub-tabs: templates, sentLog, directory, users, utilities, settings, loginActivity
+  const [subTab, setSubTab] = useState<'templates' | 'sentLog' | 'directory' | 'users' | 'deals' | 'campaigns' | 'utilities' | 'settings' | 'loginActivity'>('templates');
   
   // 1. Template States
   const [selectedTemplateId, setSelectedTemplateId] = useState(templates[0]?.id || '');
@@ -83,6 +85,10 @@ export default function CmsPortal({
   const [newUserRole, setNewUserRole] = useState<UserRole>(UserRole.ADMIN_OFFICER);
   const [newUserDept, setNewUserDept] = useState('IT & Systems');
   const [newUserIsActive, setNewUserIsActive] = useState(true);
+
+  // 6. Access Audit monitor states
+  const [authSearch, setAuthSearch] = useState('');
+  const [authRoleFilter, setAuthRoleFilter] = useState('all');
 
   // 3. Deals state
   const [dealsLoading, setDealsLoading] = useState(false);
@@ -800,6 +806,24 @@ export default function CmsPortal({
             >
               <Clock className="w-4 h-4 shrink-0" />
               <span>System Scheduler</span>
+            </button>
+
+            <button
+              id="subtab-login-activity"
+              onClick={() => setSubTab('loginActivity')}
+              className={`w-full text-left px-3 py-2.5 rounded-xl transition-all cursor-pointer flex items-center justify-between text-xs font-semibold select-none ${
+                subTab === 'loginActivity' 
+                  ? 'bg-blue-600 text-white shadow-sm font-bold' 
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-medium'
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <KeyRound className="w-4 h-4 shrink-0" />
+                <span>User Login Monitor</span>
+              </div>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono ${
+                subTab === 'loginActivity' ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'
+              }`}>{logs.filter(l => l.requestReference === 'SYSTEM_AUTH').length}</span>
             </button>
 
             <button
@@ -2253,6 +2277,210 @@ export default function CmsPortal({
 
             </div>
           )}
+
+        </div>
+      )}
+
+      {/* SUB-TAB 8: USER LOGIN & ACCESS SECURITY MONITOR */}
+      {subTab === 'loginActivity' && (
+        <div className="space-y-6 animate-fade-in text-left font-sans">
+          
+          {/* Header section with credentials overview */}
+          <div className="bg-slate-900 border border-slate-800 text-white p-5 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-3 shadow-md shadow-indigo-900/15">
+            <div>
+              <div className="flex items-center gap-2">
+                <MonitorCheck className="w-5.5 h-5.5 text-blue-400" />
+                <span className="text-[10px] font-bold text-blue-400 uppercase tracking-widest font-mono select-none">Access Control Hub</span>
+              </div>
+              <h3 className="text-base font-bold text-slate-100 mt-1">IT Department Identity & Session Log Monitor</h3>
+              <p className="text-xs text-slate-400">Review live organizational login activities, active system authentication engines, and security passcode changes.</p>
+            </div>
+            
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer border border-slate-705"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Reload Monitor Feed
+              </button>
+            </div>
+          </div>
+
+          {/* KPI Dashboard Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in">
+            
+            <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Authentication Audit Logs</span>
+              <div className="text-2xl font-extrabold text-slate-900 mt-1">
+                {logs.filter(l => l.requestReference === 'SYSTEM_AUTH').length}
+              </div>
+              <div className="text-[10px] text-slate-500 mt-1.5">Total processed authentication events</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Sandbox Encapsulated</span>
+              <div className="text-2xl font-extrabold text-yellow-600 mt-1">
+                {logs.filter(l => l.comment?.includes('Sandbox') || l.comment?.includes('Local') || (l.requestReference === 'SYSTEM_AUTH' && l.comment?.includes('Sandbox'))).length}
+              </div>
+              <div className="text-[10px] text-yellow-700 font-semibold mt-1.5">Active sandbox-based sessions</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Cloud Live Database</span>
+              <div className="text-2xl font-extrabold text-emerald-600 mt-1">
+                {logs.filter(l => (l.comment?.includes('Live') || l.comment?.includes('Cloud') || l.comment?.includes('Firebase')) && l.requestReference === 'SYSTEM_AUTH').length}
+              </div>
+              <div className="text-[10px] text-emerald-700 font-semibold mt-1.5">Secure cloud-based sessions</div>
+            </div>
+
+            <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Latest Access Event</span>
+              <div className="text-[11.5px] font-bold text-slate-800 truncate mt-2" title={logs.find(l => l.requestReference === 'SYSTEM_AUTH' || l.action.toLowerCase().includes('logged'))?.user || 'No event yet'}>
+                {logs.find(l => l.requestReference === 'SYSTEM_AUTH' || l.action.toLowerCase().includes('logged'))?.user || 'N/A'}
+              </div>
+              <div className="text-[9.5px] text-slate-400 mt-1 font-mono">
+                {logs.find(l => l.requestReference === 'SYSTEM_AUTH' || l.action.toLowerCase().includes('logged'))?.date || 'N/A'}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Search Filters Card */}
+          <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-xs flex flex-col md:flex-row gap-4 items-center justify-between animate-fade-in">
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search access history by User Email, Account Name, or Security action..."
+                className="w-full bg-slate-50 border border-slate-200 pl-10 p-2.5 rounded-xl text-xs font-semibold outline-none focus:border-blue-500 text-slate-850 transition-colors"
+                value={authSearch}
+                onChange={(e) => setAuthSearch(e.target.value)}
+              />
+            </div>
+            
+            <div className="flex gap-3 w-full md:w-auto shrink-0">
+              <select
+                className="flex-1 md:w-48 bg-slate-50 border border-slate-200 p-2.5 rounded-xl text-xs font-bold outline-none focus:border-blue-500 text-slate-700 block cursor-pointer"
+                value={authRoleFilter}
+                onChange={(e) => setAuthRoleFilter(e.target.value)}
+              >
+                <option value="all">-- Filter Access Levels --</option>
+                <option value="Initiator">Corporate Initiator</option>
+                <option value="Finance Officer">Finance Officer</option>
+                <option value="Internal Control">Internal Control</option>
+                <option value="System Administrator">System Administrator</option>
+                <option value="IT Support">IT Support (Admin)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Main Logs Table */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden animate-fade-in">
+            <div className="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center select-none">
+              <span className="text-xs font-extrabold text-slate-600 uppercase tracking-widest flex items-center gap-1.5">
+                <KeyRound className="w-4 h-4 text-indigo-500" /> Authentication Registry Trail (Live stream)
+              </span>
+              <span className="text-[10px] font-extrabold font-mono text-slate-500 bg-slate-200 px-2 py-0.5 rounded-md">
+                Found: {
+                  logs.filter(log => {
+                    const matchesSearch = 
+                      log.user.toLowerCase().includes(authSearch.toLowerCase()) ||
+                      log.action.toLowerCase().includes(authSearch.toLowerCase()) ||
+                      (log.comment && log.comment.toLowerCase().includes(authSearch.toLowerCase()));
+
+                    const matchesRole = authRoleFilter === 'all' || log.role === authRoleFilter || log.comment?.includes(authRoleFilter);
+                    return matchesSearch && matchesRole;
+                  }).length
+                } logs
+              </span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-xs text-left text-slate-700 font-sans">
+                <thead className="bg-slate-50/70 border-b border-slate-200 text-[10px] font-extrabold text-slate-400 uppercase tracking-wider font-mono">
+                  <tr>
+                    <th className="p-4">Staff Member / Account Identity</th>
+                    <th className="p-4">Designated Access Level</th>
+                    <th className="p-4">Completed Security Core Action</th>
+                    <th className="p-4">Connection & Sandbox Mode Details</th>
+                    <th className="p-4 font-mono">Access Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-sans">
+                  {logs.filter(log => {
+                    const matchesSearch = 
+                      log.user.toLowerCase().includes(authSearch.toLowerCase()) ||
+                      log.action.toLowerCase().includes(authSearch.toLowerCase()) ||
+                      (log.comment && log.comment.toLowerCase().includes(authSearch.toLowerCase()));
+
+                    const matchesRole = authRoleFilter === 'all' || log.role === authRoleFilter || log.comment?.value?.includes(authRoleFilter) || log.comment?.includes(authRoleFilter);
+                    return matchesSearch && matchesRole;
+                  }).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                        No authentication activity logs matched filter. Try logging in, logging out, or registering a new session account.
+                      </td>
+                    </tr>
+                  ) : (
+                    logs.filter(log => {
+                      const matchesSearch = 
+                        log.user.toLowerCase().includes(authSearch.toLowerCase()) ||
+                        log.action.toLowerCase().includes(authSearch.toLowerCase()) ||
+                        (log.comment && log.comment.toLowerCase().includes(authSearch.toLowerCase()));
+
+                      const matchesRole = authRoleFilter === 'all' || log.role === authRoleFilter || log.comment?.includes(authRoleFilter);
+                      return matchesSearch && matchesRole;
+                    }).map((log, idx) => {
+                      const isLogout = log.action.toLowerCase().includes('out');
+                      const isReset = log.action.toLowerCase().includes('reset') || log.action.toLowerCase().includes('passcode');
+                      
+                      return (
+                        <tr key={log.id || idx} className="hover:bg-slate-50/50 transition-colors">
+                          <td className="p-4">
+                            <strong className="text-slate-900 block font-bold text-[12.5px]">{log.user}</strong>
+                            <span className="text-[10px] text-slate-400 font-mono block transition-all">Ref: {log.requestReference}</span>
+                          </td>
+                          
+                          <td className="p-4">
+                            <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-100 text-slate-755 border border-slate-200">
+                              {log.role}
+                            </span>
+                          </td>
+
+                          <td className="p-4">
+                            <div className="flex items-center gap-1.5">
+                              <span className={`w-2 h-2 rounded-full ${isLogout ? 'bg-amber-400' : isReset ? 'bg-orange-500' : 'bg-emerald-500 animate-pulse'}`}></span>
+                              <span className="font-semibold text-slate-800">{log.action}</span>
+                            </div>
+                          </td>
+
+                          <td className="p-4 text-slate-500 text-[11px]" title={log.comment}>
+                            <div className="flex flex-wrap items-center gap-1">
+                              {log.comment?.includes('Sandbox') || log.comment?.includes('Local') ? (
+                                <span className="bg-amber-50 text-amber-800 px-1.5 py-0.5 rounded text-[9px] font-bold border border-amber-200 uppercase tracking-wider block font-mono">Sandbox</span>
+                              ) : log.comment?.includes('Live') || log.comment?.includes('Firebase') || log.comment?.includes('Cloud') ? (
+                                <span className="bg-emerald-50 text-emerald-800 px-1.5 py-0.5 rounded text-[9px] font-bold border border-emerald-250 uppercase tracking-wider block font-mono">Live DB</span>
+                              ) : null}
+                              <span>{log.comment || 'Authentication telemetry initialized.'}</span>
+                            </div>
+                          </td>
+
+                          <td className="p-4 font-mono text-slate-400 whitespace-nowrap text-[11px] font-medium">{log.date}</td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="p-3 bg-slate-50 border-t border-slate-205 text-[10px] text-slate-505 font-mono">
+              🔒 Standard Security Audit Guidelines: Log records are client-managed and persist securely in local databases aligned with regulatory IT Compliance policies.
+            </div>
+          </div>
 
         </div>
       )}

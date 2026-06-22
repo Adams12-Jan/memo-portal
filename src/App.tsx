@@ -23,7 +23,7 @@ import {
   SystemCustomSettings
 } from './types';
 
-import firebaseAuthService, { AuthUser } from './services/firebaseAuthService';
+import firebaseAuthService, { AuthUser, isFirebaseMockEnabled } from './services/firebaseAuthService';
 import { 
   getStoredData, 
   saveStoredData, 
@@ -478,16 +478,17 @@ export default function App() {
 
     const userName = `${user.first_name} ${user.last_name}`;
     const timestamp = getTimestampString();
+    const sandboxMode = isFirebaseMockEnabled();
 
     const newLog: AuditLogEntry = {
       id: `sys-${Date.now()}`,
-      requestReference: 'SYSTEM',
+      requestReference: 'SYSTEM_AUTH',
       type: 'System',
-      user: userName,
+      user: user.email || userName,
       role: userRole,
       action: 'User Logged In',
       date: timestamp,
-      comment: `Session initialized securely by ${userName} (${userRole})`
+      comment: `Session initialized securely by ${userName} (${userRole}) via [${sandboxMode ? 'Sandbox Mode' : 'Cloud Live Firebase'}]`
     };
 
     const data = shouldUseGlobalQueue(userRole)
@@ -514,6 +515,37 @@ export default function App() {
   };
 
   const handleLogout = async () => {
+    if (authUser) {
+      const userName = `${authUser.first_name} ${authUser.last_name}`;
+      const userRole = authUser.role;
+      const timestamp = getTimestampString();
+      const sandboxMode = isFirebaseMockEnabled();
+
+      const newLog: AuditLogEntry = {
+        id: `sys-${Date.now()}`,
+        requestReference: 'SYSTEM_AUTH',
+        type: 'System',
+        user: authUser.email || userName,
+        role: userRole,
+        action: 'User Logged Out',
+        date: timestamp,
+        comment: `Session closed securely by ${userName} - Mode: ${sandboxMode ? 'Sandbox' : 'Cloud Live'}`
+      };
+
+      // Ensure we merge and persist this logout log globally
+      const existingGlobal = getStoredData();
+      const nextLogs = [newLog, ...existingGlobal.logs];
+      saveStoredData({ logs: nextLogs });
+      
+      // Also update standard user logs
+      if (authUser.id) {
+        const userSpecific = getStoredData(authUser.id);
+        const nextUserLogs = [newLog, ...userSpecific.logs];
+        saveStoredData({ logs: nextUserLogs }, authUser.id);
+      }
+      setLogs(nextLogs);
+    }
+
     await firebaseAuthService.logout();
     setIsLoggedIn(false);
     setAuthUser(null);
@@ -2212,6 +2244,7 @@ export default function App() {
               onSaveSystemSettings={handleSaveSystemSettings}
               onPurgeAdvances={handlePurgeAdvances}
               onPurgeRetirements={handlePurgeRetirements}
+              logs={logs}
             />
           )}
 
