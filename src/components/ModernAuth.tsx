@@ -3,7 +3,7 @@ import {
   Mail, Lock, AlertCircle, Loader, Eye, EyeOff, ArrowRight,
   ShieldCheck, FileText, Settings, Users, Landmark, TrendingUp, Check, Sparkles, Key, HelpCircle
 } from 'lucide-react';
-import firebaseAuthService, { AuthUser } from '../services/firebaseAuthService';
+import firebaseAuthService, { AuthUser, isFirebaseMockEnabled, enableFirebaseMock } from '../services/firebaseAuthService';
 
 interface ModernAuthProps {
   onLoginSuccess: (user: AuthUser) => void;
@@ -162,6 +162,11 @@ export default function ModernAuth({
   const [newPassword, setNewPassword] = useState('');
   const [confirmResetPassword, setConfirmResetPassword] = useState('');
 
+  const handleQuickSwitchToSandbox = () => {
+    enableFirebaseMock(true);
+    window.location.reload();
+  };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -284,6 +289,36 @@ export default function ModernAuth({
   return (
     <div className="min-h-screen w-full bg-[#F3F4F7] text-[#3E3E3B] flex overflow-hidden relative font-sans">
       
+      {/* System Status Tracker Badge for Sandbox vs Firebase control */}
+      <div className="absolute top-4 right-4 z-50 flex items-center gap-1.5 bg-white border border-[#CEC9BF] shadow-xs px-2.5 py-1 rounded-full text-[10.5px]">
+        <span className="text-[10px] font-mono font-bold text-[#848580] uppercase tracking-wider">Mode:</span>
+        {isFirebaseMockEnabled() ? (
+          <button 
+            onClick={() => {
+              enableFirebaseMock(false);
+              window.location.reload();
+            }}
+            className="flex items-center gap-1 font-bold text-[#9B7D48] bg-[#9B7D48]/10 hover:bg-[#9B7D48]/20 transition-all px-1.5 py-0.5 rounded-md cursor-pointer"
+            title="Click to Switch to Real Firebase mode"
+          >
+            <span className="w-1.5 h-1.5 bg-[#9B7D48] rounded-full animate-ping"></span>
+            Local Sandbox
+          </button>
+        ) : (
+          <button 
+            onClick={() => {
+              enableFirebaseMock(true);
+              window.location.reload();
+            }}
+            className="flex items-center gap-1 font-bold text-emerald-600 bg-emerald-50 hover:bg-emerald-100 transition-all px-1.5 py-0.5 rounded-md cursor-pointer"
+            title="Click to Switch to Sandbox Mode (Local data persistence)"
+          >
+            <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
+            Real Firebase
+          </button>
+        )}
+      </div>
+      
       {/* BACKGROUND ACCENT LAYERS for subtle warmth */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#CEC9BF]/20 rounded-full filter blur-[120px] pointer-events-none z-0"></div>
       <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-[#CEC9BF]/10 rounded-full filter blur-[150px] pointer-events-none z-0"></div>
@@ -326,12 +361,35 @@ export default function ModernAuth({
 
           {/* Notification banner */}
           {error && (
-            <div className="bg-[#CEC9BF]/25 border border-[#848580] p-3 rounded-xl flex items-start gap-2.5 text-[#3E3E3B] text-xs animate-fade-in shadow-xs">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#9B7D48]" />
-              <div className="min-w-0 flex-1 leading-relaxed">
-                {error}
+            <div className="bg-[#CEC9BF]/25 border border-[#848580] p-3 rounded-xl flex flex-col gap-2 text-[#3E3E3B] text-xs animate-fade-in shadow-xs">
+              <div className="flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-[#9B7D48]" />
+                <div className="min-w-0 flex-1 leading-relaxed">
+                  {error}
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => setError('')} 
+                  className="text-[#848580] hover:text-[#3E3E3B] font-mono text-sm leading-none font-bold shrink-0 ml-1 cursor-pointer"
+                >
+                  ×
+                </button>
               </div>
-              <button onClick={() => setError('')} className="text-[#848580] hover:text-[#3E3E3B] font-mono text-sm leading-none font-bold shrink-0 ml-1">×</button>
+
+              {(error.includes('operation-not-allowed') || error.includes('provider is not enabled') || error.includes('auth/operation-not-allowed') || error.includes('not enabled')) && (
+                <div className="border-t border-[#848580]/20 pt-2 ml-6.5">
+                  <p className="text-[10.5px] text-[#848580] leading-relaxed mb-2">
+                    To bypass this project configuration barrier, you can immediately switch to sandbox mode where accounts are fully functional locally in your browser.
+                  </p>
+                  <button 
+                    type="button"
+                    onClick={handleQuickSwitchToSandbox}
+                    className="px-2.5 py-1 text-[10.5px] font-bold text-white bg-[#9B7D48] hover:bg-[#81683B] rounded-lg transition-all shadow-xs shrink-0 cursor-pointer"
+                  >
+                    Switch to Local Sandbox Mode
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

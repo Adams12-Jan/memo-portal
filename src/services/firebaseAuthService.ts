@@ -71,7 +71,19 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
-const USE_FIREBASE_MOCK = import.meta.env.VITE_USE_FIREBASE_MOCK === 'true' || !isConfigured;
+export function isFirebaseMockEnabled(): boolean {
+  return localStorage.getItem('vite_use_firebase_mock') === 'true' ||
+         import.meta.env.VITE_USE_FIREBASE_MOCK === 'true' ||
+         !isConfigured || !auth || !firestore || !storage;
+}
+
+export function enableFirebaseMock(enable: boolean = true) {
+  if (enable) {
+    localStorage.setItem('vite_use_firebase_mock', 'true');
+  } else {
+    localStorage.removeItem('vite_use_firebase_mock');
+  }
+}
 
 export interface AuthUser {
   id: string;
@@ -146,10 +158,7 @@ class FirebaseAuthService {
     portalIdentity?: string,
     profilePicture?: File | null
   ): Promise<AuthResponse> {
-    if (!isConfigured || !auth || !firestore || !storage) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       // Fallback local dev implementation when mock is enabled: store mock user in localStorage
       const mockUsersKey = 'mock_users';
       const usersJson = localStorage.getItem(mockUsersKey) || '[]';
@@ -282,10 +291,7 @@ class FirebaseAuthService {
    * Login user with email and password
    */
   async login(email: string, password: string): Promise<AuthResponse> {
-    if (!isConfigured || !auth || !firestore) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       // Local mock login
       const mockUsersKey = 'mock_users';
       const usersJson = localStorage.getItem(mockUsersKey) || '[]';
@@ -341,10 +347,7 @@ class FirebaseAuthService {
   }
 
   private async ensureUserProfile(firebaseUser: FirebaseUser): Promise<AuthUser> {
-    if (!isConfigured || !auth || !firestore) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       // Attempt to find mock user
       const mockUsersKey = 'mock_users';
       const usersJson = localStorage.getItem(mockUsersKey) || '[]';
@@ -434,10 +437,7 @@ class FirebaseAuthService {
    * Request password reset email
    */
   async requestPasswordReset(email: string): Promise<{ message?: string }> {
-    if (!isConfigured || !auth) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       // Mock behavior
       return { message: 'Password reset (mock) processed' };
     }
@@ -476,10 +476,7 @@ class FirebaseAuthService {
    * Get all users (admin only)
    */
   async getUsers(): Promise<AuthUser[]> {
-    if (!isConfigured || !auth || !firestore) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       const mockUsersKey = 'mock_users';
       const usersJson = localStorage.getItem(mockUsersKey) || '[]';
       const users = JSON.parse(usersJson) as any[];
@@ -533,10 +530,7 @@ class FirebaseAuthService {
     isActive?: boolean;
     resetPassword?: string;
   }): Promise<AuthUser> {
-    if (!isConfigured || !auth || !firestore) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       const mockUsersKey = 'mock_users';
       const usersJson = localStorage.getItem(mockUsersKey) || '[]';
       const users = JSON.parse(usersJson) as any[];
@@ -606,10 +600,7 @@ class FirebaseAuthService {
    * Get current authenticated user
    */
   async getCurrentUser(): Promise<AuthUser> {
-    if (!isConfigured || !auth || !firestore) {
-      if (!USE_FIREBASE_MOCK) {
-        throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
-      }
+    if (isFirebaseMockEnabled()) {
       const stored = this.getUser();
       if (stored) return stored;
       // Try reading mock token and user
@@ -668,8 +659,26 @@ class FirebaseAuthService {
     department?: string;
     profilePictureUrl?: string;
   }): Promise<AuthUser> {
-    if (!isConfigured || !auth || !firestore) {
-      throw new Error('Firebase is not configured. Please check FIREBASE_SETUP.md and set environment variables in .env.local');
+    if (isFirebaseMockEnabled()) {
+      const stored = this.getUser();
+      if (!stored) throw new Error('No mock user authenticated');
+      const updatedUser = {
+        ...stored,
+        first_name: updates.firstName || stored.first_name,
+        last_name: updates.lastName || stored.last_name,
+        department: updates.department || stored.department,
+        profile_picture_url: updates.profilePictureUrl || stored.profile_picture_url
+      };
+      const mockUsersKey = 'mock_users';
+      const usersJson = localStorage.getItem(mockUsersKey) || '[]';
+      const users = JSON.parse(usersJson) as any[];
+      const idx = users.findIndex(u => u.id === stored.id);
+      if (idx !== -1) {
+        users[idx] = { ...users[idx], ...updatedUser };
+        localStorage.setItem(mockUsersKey, JSON.stringify(users));
+      }
+      this.setUser(updatedUser);
+      return updatedUser;
     }
 
     try {
@@ -795,6 +804,13 @@ class FirebaseAuthService {
    * Upload profile picture
    */
   async uploadProfilePicture(userId: string, file: File): Promise<string> {
+    if (isFirebaseMockEnabled()) {
+      const stored = this.getUser();
+      if (!stored) throw new Error('No mock user authenticated');
+      // Create a local blob URL for profile avatar preview in sandbox mode
+      return URL.createObjectURL(file);
+    }
+
     try {
       const fileName = `${userId}-${Date.now()}`;
       const imageRef = storageRef(storage, `profile-pictures/${fileName}`);
@@ -825,6 +841,10 @@ class FirebaseAuthService {
    * Delete profile picture
    */
   async deleteProfilePicture(userId: string, pictureUrl: string): Promise<void> {
+    if (isFirebaseMockEnabled()) {
+      return;
+    }
+
     try {
       // Delete from Storage
       const imageRef = storageRef(storage, pictureUrl);
