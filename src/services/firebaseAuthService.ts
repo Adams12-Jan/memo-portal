@@ -464,8 +464,9 @@ class FirebaseAuthService {
    */
   async requestPasswordReset(email: string): Promise<{ message?: string }> {
     if (isFirebaseMockEnabled()) {
-      // Mock behavior
-      return { message: 'Password reset (mock) processed' };
+      // Mock behavior: Store email temporarily to identify user when resetting
+      sessionStorage.setItem('mock_reset_password_email', email.trim());
+      return { message: 'Password reset (mock) instruction generated locally.' };
     }
     try {
       await sendPasswordResetEmail(auth, email);
@@ -481,6 +482,30 @@ class FirebaseAuthService {
    * Note: In Firebase, you typically use the code from the email link
    */
   async resetPassword(token: string, newPassword: string): Promise<void> {
+    if (isFirebaseMockEnabled()) {
+      const email = sessionStorage.getItem('mock_reset_password_email');
+      if (!email) {
+        throw new Error('No password reset flow detected. Please request a new verification email first.');
+      }
+      const mockUsersKey = 'mock_users';
+      const usersJson = localStorage.getItem(mockUsersKey) || '[]';
+      const users = JSON.parse(usersJson) as any[];
+      const idx = users.findIndex(u => u.email.toLowerCase() === email.toLowerCase());
+      if (idx === -1) {
+        throw new Error('User account not found or is un-synchronized inside sandbox database.');
+      }
+      users[idx].password = newPassword;
+      localStorage.setItem(mockUsersKey, JSON.stringify(users));
+      // update logged in user if currently authenticated match
+      const current = this.getUser();
+      if (current && current.email.toLowerCase() === email.toLowerCase()) {
+        const updatedSes = { ...current } as any;
+        updatedSes.password = newPassword;
+        this.setUser(updatedSes);
+      }
+      sessionStorage.removeItem('mock_reset_password_email');
+      return;
+    }
     try {
       await confirmPasswordReset(auth, token, newPassword);
     } catch (error: any) {

@@ -268,10 +268,11 @@ export default function ModernAuth({
     setLoading(true);
 
     try {
+      await firebaseAuthService.resetPassword(resetToken.trim(), newPassword);
       setMode('login');
       setError('Passcode updated successfully. Please sign in with your new passcode.');
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || 'Password update failed. Please verify the reset code token.');
     } finally {
       setLoading(false);
     }
