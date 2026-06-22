@@ -26,7 +26,10 @@ export default function ModernAuth({
   const [showDemoGuide, setShowDemoGuide] = useState(false); // Collapsed, clean, non-intrusive drawer
   
   const defaultLogo = 'https://i.imgur.com/Om0LsC2.png';
-  const [customBrandLogoUrl, setCustomBrandLogoUrl] = useState(customLogoUrlProp?.trim() || defaultLogo);
+  const [customBrandLogoUrl, setCustomBrandLogoUrl] = useState(() => {
+    const rawUrl = customLogoUrlProp?.trim() || defaultLogo;
+    return rawUrl.includes('vyZnXCN') ? defaultLogo : rawUrl;
+  });
 
   // Background is custom premium color now #111E1E instead of random photo Unsplash image
   const defaultBgColor = '#111E1E'; 
@@ -137,7 +140,8 @@ export default function ModernAuth({
   }, []);
 
   useEffect(() => {
-    setCustomBrandLogoUrl(customLogoUrlProp?.trim() || defaultLogo);
+    const rawUrl = customLogoUrlProp?.trim() || defaultLogo;
+    setCustomBrandLogoUrl(rawUrl.includes('vyZnXCN') ? defaultLogo : rawUrl);
   }, [customLogoUrlProp]);
 
   // Login inputs
@@ -283,90 +287,6 @@ export default function ModernAuth({
       {/* BACKGROUND ACCENT LAYERS for subtle warmth */}
       <div className="absolute top-0 right-0 w-96 h-96 bg-[#CEC9BF]/20 rounded-full filter blur-[120px] pointer-events-none z-0"></div>
       <div className="absolute bottom-0 left-1/4 w-1/2 h-1/2 bg-[#CEC9BF]/10 rounded-full filter blur-[150px] pointer-events-none z-0"></div>
-
-      {/* LEFT PANEL: Signature Premium Deep Forest Green (#111E1E) Branding Showcase */}
-      <div 
-        className="w-0 lg:w-[45%] xl:w-[48%] shrink-0 h-full relative overflow-hidden hidden lg:flex flex-col justify-between p-12 md:p-16 border-r border-[#CEC9BF] bg-[#111E1E] select-none"
-      >
-        {/* Sleek radial gold flare highlights to add rich character */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#111E1E] via-[#111E1E] to-[#9B7D48]/15 pointer-events-none z-0"></div>
-        
-        {/* Subtle geometric line layout overlay strictly respecting architectural honesty */}
-        <div 
-          className="absolute inset-0 opacity-5 pointer-events-none z-0"
-          style={{
-            backgroundImage: 'linear-gradient(rgba(206,201,191,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(206,201,191,0.12) 1px, transparent 1px)',
-            backgroundSize: '40px 40px'
-          }}
-        ></div>
-
-        {/* Brand Header */}
-        <div className="relative z-10 flex items-center gap-4">
-          <div className="h-16 w-16 flex items-center justify-center shrink-0 p-2.5 bg-white rounded-2xl border border-[#CEC9BF] shadow-md">
-            <img 
-              src={customBrandLogoUrl} 
-              alt="Brand Logo" 
-              className="h-full w-full object-contain animate-fade-in" 
-              referrerPolicy="no-referrer"
-              onError={(event) => { (event.currentTarget as HTMLImageElement).src = defaultLogo; }} 
-            />
-          </div>
-          <div>
-            <h2 className="font-sans font-black text-base tracking-[0.25em] text-[#F3F4F7] leading-none uppercase">VETIVA</h2>
-            <p className="text-[10px] mt-1.5 tracking-[0.15em] font-mono text-[#CEC9BF] font-extrabold uppercase leading-none">INTERNAL MEMORANDUM</p>
-          </div>
-        </div>
-
-        {/* Corporate High-Fidelity Copy */}
-        <div className="relative z-10 my-auto max-w-md space-y-7">
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 bg-[#9B7D48]/15 border-l-2 border-[#9B7D48] px-3 py-1.5 text-[10px] font-bold tracking-widest font-mono text-[#9B7D48] uppercase">
-              <Sparkles className="w-3.5 h-3.5" /> Enterprise Expenditure Hub
-            </div>
-            
-            <h1 className="text-3xl xl:text-4xl font-extrabold text-[#F3F4F7] font-sans tracking-tight leading-tight">
-              Rigid Allocations & <br/>
-              <span className="bg-gradient-to-r from-white via-[#CEC9BF] to-[#9B7D48] bg-clip-text text-transparent underline decoration-[#9B7D48]/40 decoration-wavy">Administrative Auditing</span>
-            </h1>
-            
-            <p className="text-sm text-[#848580] leading-relaxed font-sans font-normal">
-              A high-precision processing framework ensuring compliance reviews, structured supervisor approvals, remaining balance refund folders adjustments, and immutable auditing record lists.
-            </p>
-          </div>
-
-          {/* Core system points styled cleanly */}
-          <div className="space-y-4 pt-6 border-t border-[#CEC9BF]/15">
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-[#9B7D48] shadow-sm">
-                <ShieldCheck className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#F3F4F7] font-sans">Security-First Clearance Channels</h4>
-                <p className="text-[11.5px] text-[#848580] leading-relaxed mt-0.5">Dual-signatory verification of expenditure forms and strict maximum cash ceilings control rules.</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3.5">
-              <div className="p-2 rounded-lg bg-white/5 border border-white/10 text-[#9B7D48] shadow-sm">
-                <FileText className="w-4 h-4" />
-              </div>
-              <div>
-                <h4 className="text-xs font-bold text-[#F3F4F7] font-sans">Synchronized Ledger Reporting</h4>
-                <p className="text-[11.5px] text-[#848580] leading-relaxed mt-0.5 font-sans">Continuous background checking, overdue warning logs, and instant digital sign-off records.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Left Panel Footer */}
-        <div className="relative z-10 text-[9.5px] text-[#848580] font-bold tracking-widest font-mono flex justify-between items-center border-t border-white/10 pt-4">
-          <span>© 100% SECURE PORTAL</span>
-          <div className="flex items-center gap-1.5 uppercase text-[#F3F4F7]/85">
-            <span className="h-1.5 w-1.5 rounded-full bg-[#9B7D48] animate-pulse"></span>
-            <span>PROTECTED NODE ACTIVE</span>
-          </div>
-        </div>
-      </div>
 
       {/* RIGHT PANEL: Purely Simplified, Stunning & User-Friendly Sign Landing Page */}
       <div className="flex-1 min-h-screen bg-[#F3F4F7] overflow-y-auto px-6 md:px-16 py-12 flex flex-col justify-center relative z-10">

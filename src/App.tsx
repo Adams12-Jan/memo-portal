@@ -101,7 +101,20 @@ export default function App() {
     const raw = localStorage.getItem('ca_system_settings');
     if (raw) {
       try {
-        return { ...DEFAULT_SYSTEM_SETTINGS, ...JSON.parse(raw) };
+        const parsed = JSON.parse(raw);
+        let changed = false;
+        if (parsed.customLogoUrl && parsed.customLogoUrl.includes('vyZnXCN')) {
+          parsed.customLogoUrl = '';
+          changed = true;
+        }
+        if (parsed.customBackgroundUrl && parsed.customBackgroundUrl.includes('vyZnXCN')) {
+          parsed.customBackgroundUrl = '';
+          changed = true;
+        }
+        if (changed) {
+          localStorage.setItem('ca_system_settings', JSON.stringify(parsed));
+        }
+        return { ...DEFAULT_SYSTEM_SETTINGS, ...parsed };
       } catch (e) {
         // use default
       }
