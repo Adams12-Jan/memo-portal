@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Default-deny catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Reuseable global helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'System Administrator';
+    }
+
+    // Validation template for internal corporate profile objects
+    function isValidUser(data) {
+      return data.email is string && data.email.size() > 0 && data.email.size() <= 200 &&
+             data.first_name is string && data.first_name.size() > 0 && data.first_name.size() <= 100 &&
+             data.last_name is string && data.last_name.size() > 0 && data.last_name.size() <= 100 &&
+             data.role is string && (
+               data.role == 'Initiator' || 
+               data.role == 'Line Manager' || 
+               data.role == 'Internal Control Officer' || 
+               data.role == 'Executive Director' || 
+               data.role == 'Finance Officer' || 
+               data.role == 'System Administrator'
+             ) &&
+             data.is_active is bool &&
+             data.is_verified is bool &&
+             data.created_at is string;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+
+      allow create: if isOwner(userId) && 
+                      isValidId(userId) && 
+                      isValidUser(incoming()) && 
+                      incoming().is_verified == false;
+
+      allow update: if (isValidId(userId) && isValidUser(incoming()) && (
+                      isAdmin() ||
+                      (isOwner(userId) && 
+                       // Ensure critical auth fields, roles, and status flags are read-only for standard users
+                       incoming().role == existing().role &&
+                       incoming().email == existing().email &&
+                       incoming().created_at == existing().created_at &&
+                       incoming().is_active == existing().is_active &&
+                       incoming().is_verified == existing().is_verified &&
+                       // Enforce strict update payload checking
+                       incoming().diff(existing()).affectedKeys().hasOnly([
+                         'first_name', 'last_name', 'department', 'profile_picture_url'
+                       ])
+                      )
+                    ));
+
+      allow delete: if isAdmin();
+    }
+  }
+}

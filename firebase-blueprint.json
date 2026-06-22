@@ -1,0 +1,65 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile in the application containing account information and administrative details",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "User's email address"
+        },
+        "first_name": {
+          "type": "string",
+          "description": "First name of the user"
+        },
+        "last_name": {
+          "type": "string",
+          "description": "Last name of the user"
+        },
+        "department": {
+          "type": "string",
+          "description": "Department the user belongs to"
+        },
+        "portal_identity": {
+          "type": "string",
+          "description": "The user's mapped internal identity"
+        },
+        "role": {
+          "type": "string",
+          "description": "Assigned access control role"
+        },
+        "profile_picture_url": {
+          "type": "string",
+          "description": "URL of the uploaded profile icon"
+        },
+        "is_active": {
+          "type": "boolean",
+          "description": "Whether the account is active"
+        },
+        "is_verified": {
+          "type": "boolean",
+          "description": "Whether the user's email or account has been verified"
+        },
+        "created_at": {
+          "type": "string",
+          "description": "ISO timestamp representing creation date"
+        }
+      },
+      "required": [
+        "email",
+        "first_name",
+        "last_name",
+        "role",
+        "is_active",
+        "is_verified"
+      ]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Collection of all authorized application users mapped by their authentication UIDs"
+    }
+  }
+}

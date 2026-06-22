@@ -24,6 +24,53 @@ import { UserRole } from '../types';
 import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { auth, firestore, storage, isConfigured } from '../firebase';
 
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+export interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth?.currentUser?.uid || null,
+      email: auth?.currentUser?.email || null,
+      emailVerified: auth?.currentUser?.emailVerified || null,
+      isAnonymous: auth?.currentUser?.isAnonymous || null,
+      tenantId: auth?.currentUser?.tenantId || null,
+      providerInfo: auth?.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 const USE_FIREBASE_MOCK = import.meta.env.VITE_USE_FIREBASE_MOCK === 'true' || !isConfigured;
 
 export interface AuthUser {
@@ -174,7 +221,11 @@ class FirebaseAuthService {
       };
 
       const userRef = doc(firestore, 'users', firebaseUser.uid);
-      await setDoc(userRef, userData);
+      try {
+        await setDoc(userRef, userData);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.CREATE, `users/${firebaseUser.uid}`);
+      }
 
       const token = await firebaseUser.getIdToken();
       const expiresIn = '1h'; // Firebase tokens expire in 1 hour
@@ -195,7 +246,11 @@ class FirebaseAuthService {
             };
 
             try {
-              await updateDoc(userRef, { profile_picture_url: uploadedUrl });
+              try {
+                await updateDoc(userRef, { profile_picture_url: uploadedUrl });
+              } catch (error) {
+                handleFirestoreError(error, OperationType.UPDATE, `users/${firebaseUser.uid}`);
+              }
               this.setUser(updatedUser);
             } catch (error) {
               console.error('Failed to update profile picture URL after async upload:', error);
@@ -215,6 +270,9 @@ class FirebaseAuthService {
       console.error('Firebase register error:', error?.code || 'no-code', error?.message || String(error), error);
       if (error?.code === 'auth/email-already-in-use') {
         throw new Error('That email is already registered. Please login or use a different address.');
+      }
+      if (error?.code === 'auth/operation-not-allowed' || error?.message?.includes('operation-not-allowed')) {
+        throw new Error('Email/Password authentication provider is not enabled in your Firebase project. Please go to your Firebase Console -> Build -> Authentication -> Sign-in method, click "Add new provider", select "Email/Password", enable it, and save the changes.');
       }
       throw new Error(error?.message || 'Registration failed');
     }
@@ -275,6 +333,9 @@ class FirebaseAuthService {
       };
     } catch (error: any) {
       console.error('Firebase login error:', error?.code || 'no-code', error?.message || String(error), error);
+      if (error?.code === 'auth/operation-not-allowed' || error?.message?.includes('operation-not-allowed')) {
+        throw new Error('Email/Password authentication provider is not enabled in your Firebase project. Please go to your Firebase Console -> Build -> Authentication -> Sign-in method, click "Add new provider", select "Email/Password", enable it, and save the changes.');
+      }
       throw new Error(error.message || 'Login failed');
     }
   }
@@ -306,7 +367,12 @@ class FirebaseAuthService {
       }
     }
     const userRef = doc(firestore, 'users', firebaseUser.uid);
-    const userDoc = await getDoc(userRef);
+    let userDoc;
+    try {
+      userDoc = await getDoc(userRef);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+    }
 
     if (userDoc.exists()) {
       const userData = userDoc.data() as Omit<AuthUser, 'id'>;
@@ -320,7 +386,11 @@ class FirebaseAuthService {
       };
 
       if (normalizedRole !== userData.role) {
-        await updateDoc(userRef, { role: normalizedRole });
+        try {
+          await updateDoc(userRef, { role: normalizedRole });
+        } catch (error) {
+          handleFirestoreError(error, OperationType.UPDATE, `users/${firebaseUser.uid}`);
+        }
       }
 
       return {
@@ -344,7 +414,11 @@ class FirebaseAuthService {
       created_at: new Date().toISOString()
     };
 
-    await setDoc(userRef, userData);
+    try {
+      await setDoc(userRef, userData);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, `users/${firebaseUser.uid}`);
+    }
 
     return {
       id: firebaseUser.uid,
@@ -424,7 +498,12 @@ class FirebaseAuthService {
       }));
     }
     try {
-      const querySnapshot = await getDocs(collection(firestore, 'users'));
+      let querySnapshot;
+      try {
+        querySnapshot = await getDocs(collection(firestore, 'users'));
+      } catch (error) {
+        handleFirestoreError(error, OperationType.LIST, 'users');
+      }
       const users: AuthUser[] = [];
 
       querySnapshot.forEach((doc) => {
@@ -499,10 +578,19 @@ class FirebaseAuthService {
       if (updates.profilePictureUrl) firestoreUpdate.profile_picture_url = updates.profilePictureUrl;
       if (updates.isActive !== undefined) firestoreUpdate.is_active = updates.isActive;
 
-      await updateDoc(userRef, firestoreUpdate);
+      try {
+        await updateDoc(userRef, firestoreUpdate);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+      }
 
       // Get updated user data
-      const userDoc = await getDoc(userRef);
+      let userDoc;
+      try {
+        userDoc = await getDoc(userRef);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, `users/${userId}`);
+      }
       const userData = userDoc.data() as Omit<AuthUser, 'id'>;
 
       return {
@@ -599,7 +687,11 @@ class FirebaseAuthService {
       if (updates.department) firestoreUpdate.department = updates.department;
       if (updates.profilePictureUrl) firestoreUpdate.profile_picture_url = updates.profilePictureUrl;
 
-      await updateDoc(userRef, firestoreUpdate);
+      try {
+        await updateDoc(userRef, firestoreUpdate);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${firebaseUser.uid}`);
+      }
 
       // Update Firebase Auth profile
       if (updates.firstName || updates.lastName || updates.profilePictureUrl) {
@@ -615,7 +707,12 @@ class FirebaseAuthService {
         }
       }
 
-      const userDoc = await getDoc(userRef);
+      let userDoc;
+      try {
+        userDoc = await getDoc(userRef);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.GET, `users/${firebaseUser.uid}`);
+      }
       const userData = userDoc.data() as Omit<AuthUser, 'id'>;
       const user: AuthUser = {
         id: firebaseUser.uid,
@@ -705,9 +802,13 @@ class FirebaseAuthService {
       const url = await getDownloadURL(imageRef);
 
       // Update user's profile picture URL in Firestore
-      await updateDoc(doc(firestore, 'users', userId), {
-        profile_picture_url: url
-      });
+      try {
+        await updateDoc(doc(firestore, 'users', userId), {
+          profile_picture_url: url
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+      }
 
       // Keep Firebase Auth profile in sync if available
       if (auth?.currentUser) {
@@ -730,9 +831,13 @@ class FirebaseAuthService {
       await deleteObject(imageRef);
 
       // Update user document
-      await updateDoc(doc(firestore, 'users', userId), {
-        profile_picture_url: null
-      });
+      try {
+        await updateDoc(doc(firestore, 'users', userId), {
+          profile_picture_url: null
+        });
+      } catch (error) {
+        handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+      }
     } catch (error: any) {
       throw new Error(error.message || 'Profile picture deletion failed');
     }

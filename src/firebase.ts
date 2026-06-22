@@ -1,75 +1,28 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, Auth, connectAuthEmulator } from 'firebase/auth';
-import { getFirestore, Firestore, connectFirestoreEmulator } from 'firebase/firestore';
-import { getStorage, FirebaseStorage, connectStorageEmulator } from 'firebase/storage';
+import { getAuth } from 'firebase/auth';
+import { getFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
+import firebaseConfig from '../firebase-applet-config.json';
 
-// Get Firebase config from environment variables
-// Instructions: Get these values from Firebase Console
-// https://console.firebase.google.com/ → Project Settings → Your apps → SDK setup and configuration
-const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCzHO7XmpQTfqAt0blZZNgWJSsCKodzpr8",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "memo-portal-84a84.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "memo-portal-84a84",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "memo-portal-84a84.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "671032885343",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:671032885343:web:1b3e68a57635a1c58b1bea",
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || ''
-};
+// Initialize Firebase with auto-provisioned configurations
+const app = initializeApp(firebaseConfig);
 
-// Check if Firebase is properly configured
-const isConfigured = Boolean(
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.appId
-);
+export const auth = getAuth(app);
+export const firestore = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+export const storage = getStorage(app);
+export const isConfigured = true;
 
-let app: any = null;
-let auth: Auth | null = null;
-let firestore: Firestore | null = null;
-let storage: FirebaseStorage | null = null;
-
-if (isConfigured) {
+// Validate Connection to Firestore on initial boot
+async function testConnection() {
   try {
-    // Initialize Firebase
-    app = initializeApp(firebaseConfig);
-    // Log minimal, safe info about the initialized project (redact API key)
-    const safeApiKey = firebaseConfig.apiKey ? `****${firebaseConfig.apiKey.slice(-4)}` : '(missing)';
-    console.log('Firebase initialized:', {
-      projectId: firebaseConfig.projectId,
-      appId: firebaseConfig.appId,
-      authDomain: firebaseConfig.authDomain,
-      apiKey: safeApiKey
-    });
-    
-    // Get Firebase services
-    auth = getAuth(app);
-    firestore = getFirestore(app);
-    storage = getStorage(app);
-    
-    // Use emulators in development if VITE_USE_FIREBASE_EMULATOR is set
-    if (import.meta.env.VITE_USE_FIREBASE_EMULATOR === 'true') {
-      try {
-        connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
-        connectFirestoreEmulator(firestore, 'localhost', 8080);
-        connectStorageEmulator(storage, 'localhost', 9199);
-        console.log('Firebase emulators connected');
-      } catch (error) {
-        // Emulators might already be connected
-        console.log('Firebase emulators already connected or unavailable');
-      }
-    }
+    await getDocFromServer(doc(firestore, 'test_connection_placeholder', 'connection'));
+    console.log("Firestore database connection verified successfully.");
   } catch (error) {
-    console.error('Firebase initialization error:', (error as any)?.code || '', (error as any)?.message || '', error);
-    app = null;
-    auth = null;
-    firestore = null;
-    storage = null;
+    if (error instanceof Error && error.message.includes('the client is offline')) {
+      console.error("Please check your Firebase configuration or network status.", error);
+    }
   }
-} else {
-  console.warn('Firebase is not configured. Please set environment variables in .env.local');
-  console.warn('See FIREBASE_SETUP.md for instructions.');
 }
+void testConnection();
 
-export { auth, firestore, storage, isConfigured };
 export default app;
