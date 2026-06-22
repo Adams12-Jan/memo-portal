@@ -68,6 +68,7 @@ export default function App() {
   const [authUser, setAuthUser] = useState<AuthUser | null>(() => firebaseAuthService.getUser());
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => firebaseAuthService.isAuthenticated());
   const [activeUserIdx, setActiveUserIdx] = useState(() => parseInt(localStorage.getItem('ca_session_user_idx') || '0'));
+  const [showSandboxBanner, setShowSandboxBanner] = useState<boolean>(() => sessionStorage.getItem('firebase_auto_healed_sandbox') === 'true');
 
   const authUserRole = authUser
     ? (authUser.portal_identity
@@ -1859,6 +1860,32 @@ export default function App() {
 
           {/* Main Space Container workspace */}
           <main className="flex-1 p-3 md:p-4 lg:p-6 overflow-y-auto">
+            
+            {showSandboxBanner && (
+              <div className="mb-6 bg-amber-50/90 border border-[#CEC9BF] p-4 rounded-xl flex items-start gap-3.5 shadow-xs text-[#3E3E3B] animate-fade-in print:hidden">
+                <ShieldAlert className="w-5 h-5 text-[#9B7D48] shrink-0 mt-0.5" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-extrabold text-xs uppercase tracking-wider text-slate-900">Auto-Healing: Switched to Local Sandbox Mode</h4>
+                  <p className="text-xs text-slate-600 leading-relaxed mt-1">
+                    Your Firebase project does not have the <strong>Email/Password</strong> sign-in provider enabled in the Firebase Console. 
+                    We have seamlessly and automatically activated <strong>Sandbox Mode (Local persistent database)</strong> so you can create, approve, and retire cash advance memos instantly in your browser!
+                  </p>
+                  <p className="text-[10.5px] text-[#848580] leading-relaxed mt-2 font-mono">
+                    Provider Config: Firebase Console → Authentication → Sign-in methods → Add "Email/Password" → Enable & Save.
+                  </p>
+                </div>
+                <button 
+                  type="button" 
+                  onClick={() => {
+                    sessionStorage.removeItem('firebase_auto_healed_sandbox');
+                    setShowSandboxBanner(false);
+                  }} 
+                  className="font-mono text-base font-bold text-[#848580] hover:text-[#3E3E3B] cursor-pointer select-none shrink-0"
+                >
+                  ×
+                </button>
+              </div>
+            )}
         
         {/* Core switchable Active tabs body container */}
         <div id="active-tab-body">
